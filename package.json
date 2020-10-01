@@ -1,0 +1,23 @@
+{
+  "name": "kuotabelajarbaik",
+  "version": "1.0.0",
+  "description": "Proxy browser ke Google Meet dengan Puppeteer demi kuota Kemendikbud",
+  "main": "app",
+  "scripts": {
+    "start": "node --experimental-top-level-await --experimental-specifier-resolution=node app"
+  },
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Renziera/KuotaBelajarBaik.git"
+  },
+  "author": "Renziera",
+  "license": "GPLv3",
+  "homepage": "https://github.com/Renziera/KuotaBelajarBaik#readme",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "puppeteer-core": "^5.3.1",
+    "redis": "^3.0.2"
+  }
+}
