@@ -3,9 +3,26 @@ import dotenv from 'dotenv';
 // Aktivasi dotenv
 dotenv.config();
 
-// Export semua environment variables
+// Export environment variables
 export default {
-    chromePath: process.env.CHROME_PATH,
+    port: process.env.PORT,
     email: process.env.EMAIL,
-    password: process.env.PASSWORD
+    password: process.env.PASSWORD,
+    redis: process.env.REDIS,
+    browserOptions: {
+        headless: false,
+        executablePath: process.env.CHROME_PATH,
+        defaultViewport: { width: 1280, height: 720 },
+        userDataDir: './user_data',
+        args: [
+            '--auto-select-desktop-capture-source=kuotabelajar',
+            '--window-size=1288,850'
+        ],
+        ignoreDefaultArgs: [
+            '--mute-audio',
+            '--disable-component-extensions-with-background-pages',
+            '--disable-extensions',
+            'about:blank'
+        ]
+    }
 };
