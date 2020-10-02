@@ -14,3 +14,5 @@ export const push = promisify(client.rpush).bind(client);
 export const expire = promisify(client.expire).bind(client);
 
 export const del = promisify(client.del).bind(client);
+
+export const keys = promisify(client.keys).bind(client);
