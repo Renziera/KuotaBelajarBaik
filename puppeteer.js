@@ -103,11 +103,38 @@ export async function url(id, url) {
     await page.goto(url);
     // Detach browser
     browser.disconnect();
+    // Tulis di redis
+    await redis.push(`${id}:url`, url);
 }
 
 /**
  * Cek heartbeat dan menutup browser
  */
 async function cekHeartbeat() {
-
+    // Mendapatkan semua browser
+    let ids = await redis.keys('*:browser');
+    // Konversi ke id
+    ids = ids.map(id => id.split(':')[0]);
+    // Cek presence
+    const promises = ids.map(async id => {
+        // Mendapatkan presence
+        const presence = await redis.get(`${id}:presence`);
+        // Masih terhubung
+        if (presence) return;
+        // Menutup browser
+        const browserWSEndpoint = await redis.get(`${id}:browser`);
+        const browser = await puppeteer.connect({ browserWSEndpoint, defaultViewport: { width: 1280, height: 720 } });
+        await browser.close();
+        // Hapus dari redis
+        await redis.del(`${id}:browser`);
+        await redis.del(`${id}:meet`);
+    });
+    // Menjalankan paralel
+    await Promise.all(promises);
 }
+
+// Login
+await login();
+
+// Cek heartbeat setiap menit
+setInterval(cekHeartbeat, 10000);

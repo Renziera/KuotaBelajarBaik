@@ -12,7 +12,7 @@ app.use(express.static('public'));
 // Redirect ke halaman utama
 app.use((req, res) => res.redirect('/'));
 // Mulai menerima request
-const server = app.listen(config.port);
+const server = app.listen(config.port, '127.0.0.1', () => console.info(`KuotaBelajarBaik berjalan pada port ${config.port}`));
 // Membuat server websocket
 const wss = new websocket.Server({ server });
 // Menerima koneksi websocket
