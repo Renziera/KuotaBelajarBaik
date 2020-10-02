@@ -1,78 +1,67 @@
-import puppeteer from 'puppeteer-core';
-import path from 'path';
+import express from 'express';
+import websocket from 'ws';
+import crypto from 'crypto';
+import * as redis from './redis';
+import * as puppeteer from './puppeteer';
 import config from './config';
 
+// Express instance
+const app = express();
+// Serve file frontend
+app.use(express.static('public'));
+// Redirect ke halaman utama
+app.use((req, res) => res.redirect('/'));
+// Mulai menerima request
+const server = app.listen(config.port);
+// Membuat server websocket
+const wss = new websocket.Server({ server });
+// Menerima koneksi websocket
+wss.on('connection', connection);
+
 /**
- * Menunda eksekusi
- * @param {number} time Waktu dalam ms
+ * Mengurus koneksi websocket
+ * @param {websocket} ws Koneksi websocket
  */
-function delay(time) {
-    return new Promise(r => setTimeout(r, time));
-}
-
-async function login() {
-    const browser = await puppeteer.launch({
-        headless: false,
-        executablePath: config.chromePath,
-        defaultViewport: { width: 1280, height: 720 },
-        userDataDir: './user_data',
-        args: [
-            '--auto-select-desktop-capture-source=pickme',
-            '--window-size=1280,900'
-        ],
-        ignoreDefaultArgs: [
-            '--mute-audio',
-            '--disable-component-extensions-with-background-pages',
-            'about:blank'
-        ]
+function connection(ws) {
+    // Handler pesan masuk
+    ws.on('message', async function incoming(message) {
+        // Membedah pesan masuk
+        const [protokol, perintah, id, argumen] = message.split(' ');
+        // Cek protokol
+        if (protokol !== 'kbb') return;
+        // Harus ada id
+        if (!id && perintah !== 'id') return;
+        // Lakukan perintah
+        switch (perintah) {
+            case 'id':
+                // Generate id baru
+                ws.send(`id ${crypto.randomBytes(32).toString('hex')}`);
+                break;
+            case 'cek':
+                // Cek apakah ada room
+                ws.send(`meet ${await redis.get(`${id}:meet`) ?? ''}`);
+                break;
+            case 'room':
+                // Membuat room baru
+                const meet = await puppeteer.buatRoom(id);
+                ws.send(`meet ${meet}`);
+                break;
+            case 'admit':
+                // Klik admit Google Meet
+                await puppeteer.admit(id);
+                break;
+            case 'url':
+                // Membuka url di page
+                if(!argumen) return;
+                await puppeteer.url(id, argumen);
+                break;
+            case 'heartbeat':
+                // Menjaga browser tetap berjalan
+                await redis.set(`${id}:presence`, true);
+                await redis.expire(`${id}:presence`, 60);
+                break;
+            default:
+                break;
+        }
     });
-    const page = await browser.newPage();
-    await page.goto('https://accounts.google.com');
-    await page.keyboard.type(config.email);
-    await page.keyboard.press('Enter');
-    await page.waitForNavigation({ waitUntil: 'networkidle0' });
-    await page.keyboard.type(config.password);
-    await page.keyboard.press('Enter');
-    await page.waitForNavigation({ waitUntil: 'networkidle0' });
-    await browser.close();
 }
-
-async function start() {
-    const browser = await puppeteer.launch({
-        headless: false,
-        executablePath: config.chromePath,
-        defaultViewport: { width: 1280, height: 720 },
-        userDataDir: './user_data',
-        args: [
-            '--auto-select-desktop-capture-source=pickme',
-            '--window-size=1280,900'
-        ],
-        ignoreDefaultArgs: [
-            '--mute-audio',
-            '--disable-component-extensions-with-background-pages',
-            'about:blank'
-        ]
-    });
-    const page = await browser.newPage();
-    await page.goto(URL);
-
-    const meet = await browser.newPage();
-    // Buka google meet
-    await meet.goto('https://meet.google.com/');
-    // Click join a meeting
-    await meet.mouse.click(950, 350);
-    await delay(400);
-    // Click continue
-    await meet.mouse.click(820, 480);
-    await meet.waitForNavigation({ waitUntil: 'networkidle0' });
-    await delay(5000);
-    // Untuk bypass dialog Share a Chrome Tab
-    page.evaluate(() => document.title = 'pickme');
-    // Click Present
-    await meet.mouse.click(1080, 380);
-    await delay(1000);
-    console.log(meet.url());
-    await page.mouse.click(410, 280);
-}
-
-login();

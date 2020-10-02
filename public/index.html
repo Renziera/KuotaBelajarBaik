@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuota Belajar Baik</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+</head>
+
+<body>
+    <div id="app">
+        <h3>Kuota Belajar Baik</h3>
+        <pre>
+Dikarenakan kuota belajar dari Kemendikbud tidak dapat digunakan untuk
+mengakses YouTube namun dapat mengakses Google Meet, maka dibuatlah 
+mekanisme untuk proxy browser ke Google Meet sehingga anda dapat mengakses
+situs apapun dengan kuota belajar. Keterangan selengkapnya di <a href="https://github.com/Renziera/KuotaBelajarBaik" target="_blank">GitHub</a>
+        </pre>
+        <h6 v-if="loading">Ceritanya ini loading muter-muter...</h6>
+        <template v-else>
+            <template v-if="meet">
+                Link Google Meet anda
+                <h3><a href="{{ meet }}" target="_blank">{{ meet.substr(8) }}</a></h3>
+                Silahkan join kemudian tekan tombol admit untuk dapat bergabung.
+                <br>
+                <button v-on:click="admit">ADMIT</button>
+                <br><br>
+                Biarkan tab ini terbuka agar bot tetap aktif.
+                <br>
+                Jangan lupa setting Google Meet anda ke 720p.
+                <br>
+                Anda dapat memasukkan url yang ingin diakses pada kolom di bawah.
+                <br>
+                <input type="text" placeholder="https://youtube.com" v-model="url">
+                <button v-on:click="akses">AKSES</button>
+            </template>
+            <template v-else>
+                Tekan tombol di bawah untuk mendapatkan link google meet anda.
+                <br>
+                <button v-on:click="room">BUAT ROOM</button>
+            </template>
+        </template>
+    </div>
+    <script src="/index.js"></script>
+</body>
+
+</html>
